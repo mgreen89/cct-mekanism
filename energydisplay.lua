@@ -31,10 +31,10 @@ local function displayEnergyBar(eInfo)
     term.setBackgroundColor(colors.black)
     term.setCursorPos(3, 12)
     prefix, val = du.siPrefix(eInfo.energy)
-    term.write(string.format("Stored: %0.3f %sFE (%0.2f%%)", val, prefix, eInfo.fillPercent * 100))
+    term.write(string.format("Stored: %0.3f %sJ (%0.2f%%)", val, prefix, eInfo.fillPercent * 100))
 
     prefix, val = du.siPrefix(eInfo.maxEnergy)
-    local capacityString = string.format("Capacity: %0.3f %sFE", val, prefix)
+    local capacityString = string.format("Capacity: %0.3f %sJ", val, prefix)
     term.setCursorPos(78 - 1 - string.len(capacityString), 12)
     term.write(capacityString)
 end
@@ -45,21 +45,26 @@ local function displayTransfer(eInfo)
     term.setCursorPos(3, 15)
     term.write("Energy Transfer")
 
+    local transferPrefix, transferVal = du.siPrefix(eInfo.transferCap)
+    local transferCapString = string.format("Max Transfer Rate: %0.3f %sJ/t", transferVal, transferPrefix)
+    term.setCursorPos(78 - 1 - string.len(transferCapString), 15)
+    term.write(transferCapString)
+
     paintutils.drawBox(3, 17, 39, 21, colors.white)
     paintutils.drawBox(40, 17, 76, 21, colors.white)
     local outputPc = eInfo.outputRate / eInfo.transferCap
     local inputPc = eInfo.inputRate / eInfo.transferCap
-    paintutils.drawFilledBox(38, 18, 38 - (outputPc * 34), 20, colors.red)
-    paintutils.drawFilledBox(41, 18, 41 + (inputPc * 34), 20, colors.green)
+    paintutils.drawFilledBox(38, 18, math.ceil(38 - (outputPc * 34)), 20, colors.red)
+    paintutils.drawFilledBox(41, 18, math.floor(41 + (inputPc * 34)), 20, colors.green)
 
     term.setTextColor(colors.white)
     term.setBackgroundColor(colors.black)
     local outputPrefix, outputVal = du.siPrefix(eInfo.outputRate)
-    local outputString = string.format("Output: %0.3f %sFE/t", outputVal, outputPrefix)
+    local outputString = string.format("Output: %0.3f %sJ/t", outputVal, outputPrefix)
     term.setCursorPos(3, 23)
     term.write(outputString)
     local inputPrefix, inputVal = du.siPrefix(eInfo.inputRate)
-    local inputString = string.format("Input: %0.3f %sFE/t", inputVal, inputPrefix)
+    local inputString = string.format("Input: %0.3f %sJ/t", inputVal, inputPrefix)
     term.setCursorPos(78 - 1 - string.len(inputString), 23)
     term.write(inputString)
 end
