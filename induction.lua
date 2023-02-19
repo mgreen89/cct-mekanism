@@ -9,6 +9,21 @@ end) }
 local matrix = peripheral.find("inductionPort")
 
 local function getInfo()
+    -- Other available APIs:
+    --  - isFormed
+    --  - getMinPos
+    --  - getMaxPos
+    --  - getHeight
+    --  - getLength
+    --  - getWidth
+    --  - getInstalledProviders
+    --  - getInstalledCells
+    --  - getInputItem
+    --  - getOutputItem
+    --  - getComparatorLevel
+    --  - getEnergyNeeded
+    --  - getMode
+    --  - setMode
     return {
         energy = matrix.getEnergy(),
         maxEnergy = matrix.getMaxEnergy(),
