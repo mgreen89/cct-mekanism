@@ -143,7 +143,7 @@ local function checkSafety()
     end
 
     -- 1000K seems to be about the damage limit.
-    if reactor.getTemperature() > 0 then
+    if reactor.getTemperature() > 1000 then
         setAlarm(TEMP)
     else
         unsetAlarm(TEMP)
@@ -312,14 +312,35 @@ local function updateDisplay()
 end
 
 
+local function runSafety()
+    -- This function should be run in parallel so its events aren't
+    -- eaten by the other APIs.
+    local criticalTimer = os.startTimer(0.1)
+    while true do
+        local event, timerId = os.pullEvent("timer")
+        if timerId == criticalTimer then
+            -- Run the safety checks.
+            checkSafety()
+
+            -- If there are any active or silenced alarms scram the
+            -- reactor.
+            if (anyActiveAlarms() or anySilencedAlarms()) and reactor.getStatus() then
+                reactor.scram()
+            end
+        end
+
+        -- Start the timer again.
+        criticalTimer = os.startTimer(0.1)
+    end
+end
+
+
 local function runControlInternal()
     initDisplay()
     updateDisplay()
 
-    local criticalTimer = os.startTimer(0.05)
     local normalTimer = os.startTimer(1)
 
-    local doDisplayUpdate = true
     -- Event loop.
     while true do
         local eventData = {os.pullEvent()}
@@ -327,36 +348,43 @@ local function runControlInternal()
         doDisplayUpdate = true
 
         if event == "timer" then
-            -- Just set the time again.
-            -- This ensure we get an update for safety at least once a
-            -- second, so it's not going to work for really explosive
-            -- scenarios.
-            if eventData[2] == criticalTimer then
-                -- Run the safety checks.
-                checkSafety()
-
-                -- If there are any alarms, display them.
-                -- Otherwise, just handle them on the display update.
-                if anyActiveAlarms() then
-                    displayAlarms()
-                end
-
-                -- If there are any active or silenced alarms scram the
-                -- reactor.
-                if (anyActiveAlarms() or anySilencedAlarms()) and reactor.getStatus() then
-                    reactor.scram()
-                end
-
-                -- Don't do the full display update.
-                doDisplayUpdate = false
-            elseif eventData[2] == normalTimer then
-                -- Do all the normal updates.
+            if eventData[2] == normalTimer then
                 -- Check if the reactor should be running.
+                -- This also updates the display at the end.
                 maybeStartStopReactor()
-            else
-                print("unknown timer fired!")
             end
-        elseif event == "mouse_click" then
+
+        elseif event == "peripheral_detach" then
+            -- Check if the reactor is still present.
+            -- If not, exit.
+            reactor = peripheral.find("fissionReactorLogicAdapter")
+            if reactor == nil then
+                term.setBackgroundColor(colors.black)
+                term.setTextColor(colors.white)
+                term.setCursorPos(1, 1)
+                print("Reactor detached - exiting")
+                return
+            end
+
+        end
+
+        updateDisplay()
+
+        -- Restart update timer.
+        -- Updates to this can be thrown away by other functions so
+        -- this has to be last.
+        os.stopTimer(normalTimer)
+        normalTimer = os.startTime(1)
+    end
+end
+
+local function handleDisplayClicks()
+    -- Event loop.
+    while true do
+        local eventData = {os.pullEvent()}
+        local event = eventData[1]
+
+        if event == "mouse_click" then
             handleClick(eventData[1], eventData[2], eventData[3], eventData[4])
 
         elseif event == "monitor_touch" then
@@ -376,30 +404,10 @@ local function runControlInternal()
                 unsetAlarm(TEMP)
                 unsetAlarm(DAMAGE)
             end
-        elseif event == "peripheral_detach" then
-            -- Check if the reactor is still present.
-            -- If not, exit.
-            reactor = peripheral.find("fissionReactorLogicAdapter")
-            if reactor == nil then
-                term.setBackgroundColor(colors.black)
-                term.setTextColor(colors.white)
-                term.setCursorPos(1, 1)
-                print("Reactor detached - exiting")
-                return
-            end
 
         end
 
-        if doDisplayUpdate then
-            updateDisplay()
-
-        end
-
-        -- Restart the critical timer and update timers.
-        -- These can be thrown away by other APIs.
-        -- *cough* *cough* OpenPeripheral *cough* *cough*
-        criticalTimer = os.startTimer(0.05)
-        normalTimer = os.startTimer(1)
+        updateDisplay()
     end
 end
 
@@ -414,7 +422,9 @@ local function runControl()
         return
     end
 
-    runControlInternal()
+    -- These three should be run in parallel so they each get their
+    -- own event loop.
+    parallel.waitForAny(runSafety, runControlInternal, handleDisplayClicks)
 end
 
 runControl()
