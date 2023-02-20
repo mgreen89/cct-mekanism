@@ -317,16 +317,15 @@ local function runSafety()
     -- eaten by the other APIs.
     local criticalTimer = os.startTimer(0.1)
     while true do
-        local event, timerId = os.pullEvent("timer")
-        if timerId == criticalTimer then
-            -- Run the safety checks.
-            checkSafety()
+        local _, timerId = os.pullEvent("timer")
+        -- Dont really care if this is our specific timer, ALWAYS
+        -- check the safety and reset the timer.
+        checkSafety()
 
-            -- If there are any active or silenced alarms scram the
-            -- reactor.
-            if (anyActiveAlarms() or anySilencedAlarms()) and reactor.getStatus() then
-                reactor.scram()
-            end
+        -- If there are any active or silenced alarms scram the
+        -- reactor.
+        if (anyActiveAlarms() or anySilencedAlarms()) and reactor.getStatus() then
+            reactor.scram()
         end
 
         -- Start the timer again.
@@ -343,43 +342,26 @@ local function runControlInternal()
 
     -- Event loop.
     while true do
-        local eventData = {os.pullEvent()}
-        local event = eventData[1]
-        doDisplayUpdate = true
+        local _, timerId = os.pullEvent("timer")
+        if timerId == normalTimer then
+            -- Check if the reactor should be running.
+            -- This also updates the display at the end.
+            maybeStartStopReactor()
 
-        if event == "timer" then
-            if eventData[2] == normalTimer then
-                -- Check if the reactor should be running.
-                -- This also updates the display at the end.
-                maybeStartStopReactor()
-            end
+            updateDisplay()
 
-        elseif event == "peripheral_detach" then
-            -- Check if the reactor is still present.
-            -- If not, exit.
-            reactor = peripheral.find("fissionReactorLogicAdapter")
-            if reactor == nil then
-                term.setBackgroundColor(colors.black)
-                term.setTextColor(colors.white)
-                term.setCursorPos(1, 1)
-                print("Reactor detached - exiting")
-                return
-            end
-
+            -- Restart update timer.
+            -- Updates to this can be thrown away by other functions so
+            -- this has to be last.
+            normalTimer = os.startTimer(1)
         end
-
-        updateDisplay()
-
-        -- Restart update timer.
-        -- Updates to this can be thrown away by other functions so
-        -- this has to be last.
-        os.stopTimer(normalTimer)
-        normalTimer = os.startTime(1)
     end
 end
 
 local function handleDisplayClicks()
-    -- Event loop.
+    -- Event loop for display clicks.
+    -- Don't update the display here - it will be done in at most one second
+    -- by the normal control function.
     while true do
         local eventData = {os.pullEvent()}
         local event = eventData[1]
@@ -404,10 +386,19 @@ local function handleDisplayClicks()
                 unsetAlarm(TEMP)
                 unsetAlarm(DAMAGE)
             end
+        elseif event == "peripheral_detach" then
+            -- Check if the reactor is still present.
+            -- If not, exit.
+            reactor = peripheral.find("fissionReactorLogicAdapter")
+            if reactor == nil then
+                term.setBackgroundColor(colors.black)
+                term.setTextColor(colors.white)
+                term.setCursorPos(1, 1)
+                print("Reactor detached - exiting")
+                return
+            end
 
         end
-
-        updateDisplay()
     end
 end
 
