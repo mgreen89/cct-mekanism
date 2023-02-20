@@ -16,6 +16,7 @@ local REPO = "https://raw.githubusercontent.com/mgreen89/cct-mekanism/main/"
 for _, s in pairs(scripts) do
     local name = s .. ".lua"
     local url = REPO .. name
+    print("Downloading " .. name)
     d = http.get(url)
     if d == nil then
         print(string.format("Error getting %s", url))

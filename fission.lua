@@ -136,21 +136,21 @@ local function checkSafety()
     -- Sets alarms if any problems found.
 
     -- Never run when damaged.
-    if reactor.getDamagePercent > 0 then
+    if reactor.getDamagePercent() > 0 then
         setAlarm(DAMAGE)
     else
         unsetAlarm(DAMAGE)
     end
 
     -- 1000K seems to be about the damage limit.
-    if reactor.getTemperature > 0 then
+    if reactor.getTemperature() > 0 then
         setAlarm(TEMP)
     else
         unsetAlarm(TEMP)
     end
 
     -- Waste at 90% full is pushing it.
-    if reactor.getWasteFilledPercentage > 0.9 then
+    if reactor.getWasteFilledPercentage() > 0.9 then
         setAlarm(WASTE)
     else
         unsetAlarm(WASTE)
@@ -206,13 +206,13 @@ local function displayInfo()
     term.write("Info:")
 
     term.setCursorPos(2, 14)
-    term.write(string.format("Coolant : %dmB (%.0f%%)", reactor.getCoolant(), reactor.getCoolantFilledPercentage()))
+    term.write(string.format("Coolant : %dmB (%.0f%%)", reactor.getCoolant().amount, reactor.getCoolantFilledPercentage()))
     term.setCursorPos(2, 15)
-    term.write(string.format("Fuel    : %dmB (%.0f%%)", reactor.getFuel(), reactor.getFuelFilledPercentage()))
+    term.write(string.format("Fuel    : %dmB (%.0f%%)", reactor.getFuel().amount, reactor.getFuelFilledPercentage()))
     term.setCursorPos(2, 16)
-    term.write(string.format("Heated C: %dmB (%.0f%%)", reactor.getHeatedCoolant(), reactor.getHeatedCoolantFilledPercentage()))
+    term.write(string.format("Heated C: %dmB (%.0f%%)", reactor.getHeatedCoolant().amount, reactor.getHeatedCoolantFilledPercentage()))
     term.setCursorPos(2, 17)
-    term.write(string.format("Waste   : %dmB (%.0f%%)", reactor.getWaste(), reactor.getWasteFilledPercentage()))
+    term.write(string.format("Waste   : %dmB (%.0f%%)", reactor.getWaste().amount, reactor.getWasteFilledPercentage()))
     term.setCursorPos(2, 18)
     term.write(string.format("Requested Burn Rate: %dmB/t", reactor.getBurnRate()))
     term.setCursorPos(2, 19)
