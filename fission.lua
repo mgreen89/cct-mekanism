@@ -279,9 +279,7 @@ end
 local function maybeStartStopReactor()
     if MODE == AUTO and not anyAlarms() then
         reactor.activate()
-    end
-
-    if MODE == OFF then
+    elseif MODE == OFF then
         reactor.scram()
     end
 end
@@ -351,22 +349,15 @@ local function runControlInternal()
 
                 -- Don't do the full display update.
                 doDisplayUpdate = false
-
-                -- Restart the critical timer.
-                criticalTimer = os.startTimer(0.05)
             elseif eventData[2] == normalTimer then
                 -- Do all the normal updates.
                 -- Check if the reactor should be running.
                 maybeStartStopReactor()
-
-                -- Restart the normal timer.
-                normalTimer = os.startTimer(1)
             else
                 print("unknown timer fired!")
             end
         elseif event == "mouse_click" then
             handleClick(eventData[1], eventData[2], eventData[3], eventData[4])
-            print("Button", eventData[2], "was clicked at", eventData[3], ",", eventData[4])
 
         elseif event == "monitor_touch" then
             -- Always a right click.
@@ -374,7 +365,6 @@ local function runControlInternal()
 
         elseif event == "key" then
             -- Debugging only
-            print("Key code", eventData[2], "was pressed")
             if eventData[2] == keys["w"] then
                 setAlarm(WASTE)
             elseif eventData[2] == keys["t"] then
@@ -404,6 +394,12 @@ local function runControlInternal()
             updateDisplay()
 
         end
+
+        -- Restart the critical timer and update timers.
+        -- These can be thrown away by other APIs.
+        -- *cough* *cough* OpenPeripheral *cough* *cough*
+        criticalTimer = os.startTimer(0.05)
+        normalTimer = os.startTimer(1)
     end
 end
 
@@ -421,4 +417,4 @@ local function runControl()
     runControlInternal()
 end
 
-runControlInternal()
+runControl()
