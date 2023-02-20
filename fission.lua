@@ -206,13 +206,13 @@ local function displayInfo()
     term.write("Info:")
 
     term.setCursorPos(2, 14)
-    term.write(string.format("Coolant : %dmB (%.0f%%)", reactor.getCoolant().amount, reactor.getCoolantFilledPercentage()))
+    term.write(string.format("Coolant : %dmB (%.0f%%)", reactor.getCoolant().amount, reactor.getCoolantFilledPercentage() * 100))
     term.setCursorPos(2, 15)
-    term.write(string.format("Fuel    : %dmB (%.0f%%)", reactor.getFuel().amount, reactor.getFuelFilledPercentage()))
+    term.write(string.format("Fuel    : %dmB (%.0f%%)", reactor.getFuel().amount, reactor.getFuelFilledPercentage() * 100))
     term.setCursorPos(2, 16)
-    term.write(string.format("Heated C: %dmB (%.0f%%)", reactor.getHeatedCoolant().amount, reactor.getHeatedCoolantFilledPercentage()))
+    term.write(string.format("Heated C: %dmB (%.0f%%)", reactor.getHeatedCoolant().amount, reactor.getHeatedCoolantFilledPercentage() * 100))
     term.setCursorPos(2, 17)
-    term.write(string.format("Waste   : %dmB (%.0f%%)", reactor.getWaste().amount, reactor.getWasteFilledPercentage()))
+    term.write(string.format("Waste   : %dmB (%.0f%%)", reactor.getWaste().amount, reactor.getWasteFilledPercentage() * 100))
     term.setCursorPos(2, 18)
     term.write(string.format("Requested Burn Rate: %dmB/t", reactor.getBurnRate()))
     term.setCursorPos(2, 19)
@@ -313,8 +313,9 @@ end
 
 
 local function runSafety()
+    -- Run the safety checks for the reactor.
     -- This function should be run in parallel so its events aren't
-    -- eaten by the other APIs.
+    -- pulled off the queue.
     local criticalTimer = os.startTimer(0.1)
     while true do
         local _, timerId = os.pullEvent("timer")
@@ -334,7 +335,7 @@ local function runSafety()
 end
 
 
-local function runControlInternal()
+local function runUpdate()
     initDisplay()
     updateDisplay()
 
@@ -348,20 +349,21 @@ local function runControlInternal()
             -- This also updates the display at the end.
             maybeStartStopReactor()
 
+            -- Update the display.
+            -- The peripheral APIs may result in timer events being thrown
+            -- away so make sure the timer is restarted _after_ this is done.
             updateDisplay()
 
             -- Restart update timer.
-            -- Updates to this can be thrown away by other functions so
-            -- this has to be last.
             normalTimer = os.startTimer(1)
         end
     end
 end
 
-local function handleDisplayClicks()
-    -- Event loop for display clicks.
-    -- Don't update the display here - it will be done in at most one second
-    -- by the normal control function.
+local function handleEvents()
+    -- Event loop for non-timer, non-critical, events.
+    -- Don't update the display here - it's done by runUpdate and doing
+    -- two at the same time can cause weird artifacts.
     while true do
         local eventData = {os.pullEvent()}
         local event = eventData[1]
@@ -373,19 +375,6 @@ local function handleDisplayClicks()
             -- Always a right click.
             handleClick(eventData[1], 2, eventData[3], eventData[4])
 
-        elseif event == "key" then
-            -- Debugging only
-            if eventData[2] == keys["w"] then
-                setAlarm(WASTE)
-            elseif eventData[2] == keys["t"] then
-                setAlarm(TEMP)
-            elseif eventData[2] == keys["d"] then
-                setAlarm(DAMAGE)
-            elseif eventData[2] == keys["c"] then
-                unsetAlarm(WASTE)
-                unsetAlarm(TEMP)
-                unsetAlarm(DAMAGE)
-            end
         elseif event == "peripheral_detach" then
             -- Check if the reactor is still present.
             -- If not, exit.
@@ -394,7 +383,7 @@ local function handleDisplayClicks()
                 term.setBackgroundColor(colors.black)
                 term.setTextColor(colors.white)
                 term.setCursorPos(1, 1)
-                print("Reactor detached - exiting")
+                print("Reactor detached - exiting                         ")
                 return
             end
 
@@ -415,7 +404,7 @@ local function runControl()
 
     -- These three should be run in parallel so they each get their
     -- own event loop.
-    parallel.waitForAny(runSafety, runControlInternal, handleDisplayClicks)
+    parallel.waitForAny(runSafety, runUpdate, handleEvents)
 end
 
 runControl()
