@@ -277,9 +277,9 @@ end
 
 
 local function maybeStartStopReactor()
-    if MODE == AUTO and not anyAlarms() then
+    if MODE == AUTO and not anyAlarms() and not reactor.getStatus() then
         reactor.activate()
-    elseif MODE == OFF then
+    elseif MODE == OFF and reactor.getStatus() then
         reactor.scram()
     end
 end
@@ -343,7 +343,7 @@ local function runControlInternal()
 
                 -- If there are any active or silenced alarms scram the
                 -- reactor.
-                if anyActiveAlarms() or anySilencedAlarms() then
+                if (anyActiveAlarms() or anySilencedAlarms()) and reactor.getStatus() then
                     reactor.scram()
                 end
 
