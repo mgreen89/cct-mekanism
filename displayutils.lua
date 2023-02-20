@@ -1,4 +1,13 @@
 
+local function drawTextBox(minX, minY, maxX, maxY, bgColor, text, textColor)
+    paintutils.drawFilledBox(minX, minY, maxX, maxY, bgColor)
+    term.setCursorPos(
+        math.floor((maxX - minX + 1 - string.len(text)) / 2) + minX,
+        math.floor((maxY - minY) / 2) + minY
+    )
+    term.setTextColor(textColor)
+    term.write(text)
+end
 
 local function humanSeconds(secs)
     secs = math.floor(secs)
@@ -79,4 +88,5 @@ return {
     humanTicks = humanTicks,
     humanSeconds = humanSeconds,
     siPrefix = siPrefix,
+    drawTextBox = drawTextBox,
 }
