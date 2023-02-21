@@ -53,6 +53,22 @@ local function getInfo()
     --  - setRedstoneMode
     --  - getLogicMode
     --  - setLogicMode
+    return {
+        fuel = reactor.getFuel(),
+        fuelCapacity = reactor.getFuelCapacity(),
+        coolant = reactor.getCoolant(),
+        coolantCapacity = reactor.getCoolantCapacity(),
+        heatedCoolant = reactor.getHeatedCoolant(),
+        heatedCoolantCapacity = reactor.getHeatedCoolantCapacity(),
+        waste = reactor.getWaste(),
+        wasteCapacity = reactor.getWasteCapacity(),
+        status = reactor.getStatus(),
+        temperature = reactor.getTemperature(),
+        damagePercent = reactor.getDamagePercent(),
+        burnRate = reactor.getBurnRate(),
+        actualBurnRate = reactor.getActualBurnRate(),
+        maxBurnRate = reactor.getMaxBurnRate(),
+    }
 end
 
 -- Run a fission reactor safely.
@@ -160,9 +176,12 @@ end
 -- Assume the resolution is 51x19 - that of a computer.
 -- --------------------------------------------------
 --  -----------------------------      -------------
---  |  OFF  |  MANUAL  |  AUTO  |      |   ALARM   |
+--  |  OFF  |  MANUAL  |  AUTO  |      |   STATUS  |
 --  -----------------------------      -------------
-
+--
+--  Info                               -------------
+--    ...                              |   ALARM   |
+--    ...                              -------------
 local function displayModeSelect()
     local offText, offBg = colors.lightGray, colors.gray
     local manualText, manualBg = colors.lightGray, colors.gray
@@ -202,20 +221,20 @@ local function displayInfo()
     term.setTextColor(colors.white)
     term.setBackgroundColor(colors.black)
 
-    term.setCursorPos(2, 13)
+    term.setCursorPos(2, 9)
     term.write("Info:")
 
-    term.setCursorPos(2, 14)
+    term.setCursorPos(2, 10)
     term.write(string.format("Coolant : %dmB (%.0f%%)", reactor.getCoolant().amount, reactor.getCoolantFilledPercentage() * 100))
-    term.setCursorPos(2, 15)
+    term.setCursorPos(2, 11)
     term.write(string.format("Fuel    : %dmB (%.0f%%)", reactor.getFuel().amount, reactor.getFuelFilledPercentage() * 100))
-    term.setCursorPos(2, 16)
+    term.setCursorPos(2, 12)
     term.write(string.format("Heated C: %dmB (%.0f%%)", reactor.getHeatedCoolant().amount, reactor.getHeatedCoolantFilledPercentage() * 100))
-    term.setCursorPos(2, 17)
+    term.setCursorPos(2, 13)
     term.write(string.format("Waste   : %dmB (%.0f%%)", reactor.getWaste().amount, reactor.getWasteFilledPercentage() * 100))
-    term.setCursorPos(2, 18)
+    term.setCursorPos(2, 14)
     term.write(string.format("Requested Burn Rate: %dmB/t", reactor.getBurnRate()))
-    term.setCursorPos(2, 19)
+    term.setCursorPos(2, 15)
     term.write(string.format("Actual Burn Rate   : %dmB/t", reactor.getActualBurnRate()))
 end
 
@@ -275,7 +294,6 @@ local function handleClick(name, button, x, y)
     end
 end
 
-
 local function maybeStartStopReactor()
     if MODE == AUTO and not anyAlarms() and not reactor.getStatus() then
         reactor.activate()
@@ -333,7 +351,6 @@ local function runSafety()
         criticalTimer = os.startTimer(0.1)
     end
 end
-
 
 local function runUpdate()
     initDisplay()
