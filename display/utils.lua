@@ -1,12 +1,49 @@
+-- Display utilities.
 
 local function drawTextBox(minX, minY, maxX, maxY, bgColor, text, textColor)
     paintutils.drawFilledBox(minX, minY, maxX, maxY, bgColor)
-    term.setCursorPos(
-        math.floor((maxX - minX + 1 - string.len(text)) / 2) + minX,
-        math.floor((maxY - minY) / 2) + minY
-    )
-    term.setTextColor(textColor)
-    term.write(text)
+    if text then
+        term.setCursorPos(
+            math.floor((maxX - minX + 1 - string.len(text)) / 2) + minX,
+            math.floor((maxY - minY) / 2) + minY
+        )
+        term.setTextColor(textColor)
+        term.write(text)
+    end
+end
+
+function justify(t)
+    -- Justify text within the given area.
+    local text = assert(t.text or t[1])
+    local align = t.align or t[2] or "left"
+    local y = t.y or t[3]
+    local display = t.display or t[4]
+    local textColor = t.textColor or t[5]
+    local bgColor = t.bgColor or t[6]
+
+    local d = display
+    if display == nil then
+        d = term.current()
+    end
+    local line = y or d.getCursorPos()[2]
+    local dX, dY = d.getSize()
+    local length = string.len(text)
+
+    if textColor then
+        d.setTextColor(textColor)
+    end
+    if bgColor then
+        d.setBackgroundColor(bgColor)
+    end
+
+    if align == "left" then
+        d.setCursorPos(1, line)
+    elseif align == "center" or align == "centre" then
+        d.setCursorPos(math.floor((dX - length) / 2), line)
+    elseif align == "right" then
+        d.setCursorPos(dX - length, line)
+    end
+    d.write(text)
 end
 
 local function humanSeconds(secs)

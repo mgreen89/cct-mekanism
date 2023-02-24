@@ -1,14 +1,13 @@
 -- Induction energy server.
 
-energy = require "energy"
+local package = (...):match("(.-)[^%. ]+$")
+local parentPackage = package:match("(.-)[^%.]+%.$")
+local s = require(parentPackage .. "server")
 
-local modems = { peripheral.find("modem", function(name, modem)
-    return true --modem.isWireless()
-end) }
+local PROTOCOL_NAME = "induction"
+local SERVER_HOSTNAME = "matrix"
 
-local matrix = peripheral.find("inductionPort")
-
-local function getInfo()
+local function getInfo(matrix)
     -- Other available APIs:
     --  - isFormed
     --  - getMinPos
@@ -35,19 +34,11 @@ local function getInfo()
 end
 
 local function runServer()
-    local id, msg
-    rednet.host(energy.PROTOCOL_NAME, "server")
-    while true do
-        id, msg = rednet.receive(energy.PROTOCOL_NAME)
-        if msg == "getInfo" then
-            rednet.send(id, getInfo(), energy.PROTOCOL_NAME)
-        else
-            print("Received unknown message:", msg)
-        end
-    end
+    s.runServer(PROTOCOL_NAME, "matrix", "inductionPort", {getInfo = getInfo})
 end
 
-for i, m in pairs(modems) do
-    rednet.open(peripheral.getName(m))
-end
-runServer()
+return {
+    runServer = runServer,
+    PROTOCOL_NAME = PROTOCOL_NAME,
+    SERVER_HOSTNAME = SERVER_HOSTNAME,
+}

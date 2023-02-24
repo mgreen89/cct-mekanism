@@ -1,4 +1,5 @@
 -- API for an information source serving information over rednet.
+
 local P = nil
 
 local function handleRednet(protocol_name, hostname, apis)
@@ -10,6 +11,9 @@ local function handleRednet(protocol_name, hostname, apis)
         if fn ~= nil then
             if P ~= nil then
                 rednet.send(id, fn(P), protocol_name)
+            else
+                print(("Got %s request but have no peripheral"):format(msg))
+                rednet.send(id, nil, protocol_name)
             end
         else
             print("Received unknown message:", msg)
@@ -34,7 +38,7 @@ local function handleEvents(peripheral_type)
                 if P ~= nil then
                     P = peripheral_type
                 else
-                    print(string.format("Already got a peripheral of type %s, ignoring", peripheral_type))
+                    print(("Already got a peripheral of type %s, ignoring"):format(peripheral_type))
                 end
             end
 
@@ -67,9 +71,11 @@ local function runServer(protocol_name, hostname, peripheral_type, apis)
 
     p = { peripheral.find(peripheral_type) }
     if #p > 1 then
-        print(string.format("Error: more than one peripheral of type %s", peripheral_type))
+        print(("Error: more than one peripheral of type %s"):format(peripheral_type))
     elseif #p == 1 then
         P = p[1]
+    else
+        print(("No peripheral found of type %s"):format(peripheral_type))
     end
 
     -- No partial application, so create locals to parallelize.
@@ -81,7 +87,7 @@ local function runServer(protocol_name, hostname, peripheral_type, apis)
         handleEvents(peripheral_type)
     end
 
-    parallel(hr, handleEvents)
+    parallel.waitForAny(hr, he)
 end
 
 return {

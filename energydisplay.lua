@@ -1,7 +1,7 @@
 -- wxh 4x3 ->  78x38
 
-local energy = require "energy"
-local du = require "displayutils"
+local du = require("display.utils")
+local ind = require("mekanism.induction")
 
 local function displayEnergyBar(eInfo)
     term.setBackgroundColor(colors.black)
@@ -113,12 +113,23 @@ local function display(eInfo)
     end
 end
 
+local function getInfo()
+    local svr = rednet.lookup(ind.PROTOCOL_NAME, ind.SERVER_HOSTNAME)
+    sent = rednet.send(svr, "getInfo", ind.PROTOCOL_NAME)
+    if not sent then
+        printError("Message not sent - rednet not opened")
+        return {}
+    end
+    id, msg = rednet.receive(ind.PROTOCOL_NAME, 2)
+    return msg
+end
+
 function go()
     term.setCursorBlink(false)
 
     local pc
     while true do
-        eInfo = energy.getInfo()
+        eInfo = getInfo()
         if eInfo ~= nil then
             display(eInfo)
         else

@@ -1,6 +1,8 @@
 -- Fission Reactor
 
-local du = require "displayutils"
+-- Add the parent folder to the path.
+package.path = package.path .. ";../?.lua"
+local du = require "display.utils"
 
 local modems = { peripheral.find("modem", function(name, modem)
     return true
