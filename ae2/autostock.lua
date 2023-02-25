@@ -36,7 +36,7 @@ local function stock(meBridge, item, meItem, monitorDisplay, monitorRow, logDisp
         status = " E "
     else
         itemCount = meItem.amount
-        if meItem.amount < item[3] then
+        if itemCount < item[3] then
             local crafting = requestCraft(meBridge, item, item[3] - meItem.amount, logDisplay)
             if crafting then
                 countColor, status, statusColor = colors.blue, " * ", colors.blue
@@ -58,7 +58,7 @@ local function getAll(meBridge, items)
     local itemPairs = {}
     for i = 1, #items do
         local item = items[i]
-        table.insert(itemPairs, {item, meBridge.getItem(item[2])})
+        table.insert(itemPairs, {item, meBridge.getItem({name = item[2]})})
     end
     return itemPairs
 end
