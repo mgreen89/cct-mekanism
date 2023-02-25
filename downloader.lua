@@ -1,17 +1,27 @@
 -- Download all the scripts here.
 
+local dirs = {
+    "ae2",
+    "display",
+    "mekanism",
+}
+
 local scripts = {
-    "displayutils",
-    "energy",
+    "ae2/autostock",
+    "display/utils",
+    "mekanism/fission",
+    "mekanism/fusion",
+    "mekanism/induction",
+    "mekanism/sps",
+    "mekanism/turbine",
     "energydisplay",
-    "fission",
-    "fusion",
-    "induction",
-    "sps",
-    "turbine",
 }
 
 local REPO = "https://raw.githubusercontent.com/mgreen89/cct-mekanism/main/"
+
+for _, d in pairs(dirs) do
+    fs.makeDir(d)
+end
 
 for _, s in pairs(scripts) do
     local name = s .. ".lua"
