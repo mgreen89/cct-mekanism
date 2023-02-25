@@ -14,6 +14,7 @@ local scripts = {
     "mekanism/induction",
     "mekanism/sps",
     "mekanism/turbine",
+    "autostock",
     "energydisplay",
 }
 
