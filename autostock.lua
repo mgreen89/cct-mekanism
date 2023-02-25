@@ -22,4 +22,6 @@ items = {
 }
 
 monitor = peripheral.find("monitor")
-as.run(items, monitor, term.current())
+mX, mY = monitor.getSize()
+mWindow = window.create(monitor, 2, 1, mX - 2, mY - 1)
+as.run(items, mWindow, term.current())

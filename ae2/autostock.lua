@@ -49,9 +49,9 @@ local function stock(meBridge, item, meItem, monitorDisplay, monitorRow, logDisp
     end
 
     monitorDisplay.setCursorPos(1, monitorRow)
-    du.justify{itemName, "left", display=monitorDisplay, fgColor=itemColor}
-    du.justify{("   %d/%d   "):format(itemCount, reqCount), "right", display=monitorDisplay, fgColor=countColor}
-    du.justify{status, "right", display=monitorDisplay, fgColor=statusColor}
+    du.justify{itemName, "left", display=monitorDisplay, textColor=itemColor}
+    du.justify{("   %d/%d   "):format(itemCount, reqCount), "right", display=monitorDisplay, textColor=countColor}
+    du.justify{status, "right", display=monitorDisplay, textColor=statusColor}
 end
 
 local function getAll(meBridge, items)
@@ -79,7 +79,7 @@ local function run(items, monitorDisplay, logDisplay)
     -- Clear the monitor display and set the title.
     monitorDisplay.setBackgroundColor(colors.black)
     monitorDisplay.clear()
-    justify{"AutoStock", "center", y=1, display=monitorDisplay, fgColor=colors.white}
+    justify{"AutoStock", "center", y=1, display=monitorDisplay, textColor=colors.white}
     monitorDisplay.setCursorPos(1, 3)
 
     -- Find the ME bridge.

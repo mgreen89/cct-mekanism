@@ -25,8 +25,9 @@ function justify(t)
     if display == nil then
         d = term.current()
     end
-    local line = y or d.getCursorPos()[2]
-    local dX, dY = d.getSize()
+    local _, cY = d.getCursorPos()
+    local line = y or cY
+    local dX, _ = d.getSize()
     local length = string.len(text)
 
     if textColor then
@@ -126,4 +127,5 @@ return {
     humanSeconds = humanSeconds,
     siPrefix = siPrefix,
     drawTextBox = drawTextBox,
+    justify = justify,
 }
